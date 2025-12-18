@@ -1,0 +1,188 @@
+
+
+/* Reset*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #0a192f; /* Cor de fundo de segurança */
+}
+
+/* Estrutura de fundo  (layout) */
+.background-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+/*Configuração da imagem de fundo*/
+    background-image: url('images/fundologin.png'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+/*centralização do card pelo flexbox*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+}
+
+/* Overlay(máscara) */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(10, 25, 47, 0.85), rgba(10, 25, 47, 0.65));
+    z-index: 1;
+}
+
+/* --- Card de login (vidro) --- */
+.card-container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 450px;
+    padding: 3rem;
+    border-radius: 20px; /* Cantos mais arredondados */
+    
+    /* EFEITO DE VIDRO FOSCO */
+    background-color: rgba(255, 255, 255, 0.1); /* Branco muito transparente */
+    backdrop-filter: blur(12px); /* O desfoque mágico */
+    -webkit-backdrop-filter: blur(12px); /* Para Safari */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Borda sutil brilhante */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Sombra profunda */
+    
+    color: #ffffff; /* Texto padrão branco */
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* tipografia e hierarquia visual*/
+.logo-area {
+    font-weight: 700;
+    color: #60a5fa; /* Azul claro neon */
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(96, 165, 250, 0.5); /* Brilho no logo */
+}
+
+h1 { 
+    color: #ffffff; 
+    font-size: 2rem; 
+    margin-bottom: 0.5rem; 
+    text-align: center; 
+    font-weight: 600;
+}
+
+.subtitle { 
+    color: #cbd5e1; /* Cinza claro (Slate 300) */
+    margin-bottom: 2.5rem; 
+    text-align: center; 
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* formulários e interatividade */
+.input-group { margin-bottom: 1.5rem; }
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #e2e8f0; /* Cinza quase branco (Slate 200) */
+    font-size: 0.9rem;
+}
+
+input {
+    width: 100%;
+    padding: 14px 16px;
+    /* Fundo do input transparente */
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    color: #ffffff; /* Texto digitado branco */
+    transition: all 0.3s ease;
+}
+
+/* Cor do placeholder (texto de exemplo) */
+input::placeholder {
+    color: #94a3b8; /* Cinza médio (Slate 400) */
+}
+
+input:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #60a5fa; /* Borda azul neon ao focar */
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2); /* Brilho azul */
+}
+
+/* LINKS E BOTÕES */
+.forgot-password {
+    text-align: right; 
+    margin-top: 10px; 
+    font-size: 0.9rem;
+}
+
+a { 
+    color: #60a5fa; /* Azul claro neon */
+    text-decoration: none; 
+    font-weight: 600; 
+    transition: color 0.2s;
+}
+a:hover { 
+    color: #93c5fd; /* Azul mais claro ainda ao passar o mouse */
+    text-shadow: 0 0 8px rgba(147, 197, 253, 0.6);
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    /* Gradiente futurista */
+    background: linear-gradient(135deg, #0066ff 0%, #60a5fa 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4); /* Sombra com brilho azul */
+}
+
+button:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 102, 255, 0.5);
+    filter: brightness(1.1); /* Fica mais brilhante */
+}
+button:active { transform: translateY(0); }
+
+.footer-text {
+    text-align: center;
+    margin-top: 2.5rem;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+}
+
+/* Responsividade */
+@media (max-width: 500px) {
+    .card-container {
+        padding: 2rem;
+    }
+    h1 { font-size: 1.75rem; }
+}
