@@ -92,17 +92,25 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// 3. Rota de listgem de transações (get) - busca o histórico financeiro, juntando com a
-//tabela de categorias
+
+// 3. Rota de listagem de transações (AGORA FILTRANDO POR USUÁRIO)
 app.get('/transacoes', async (req, res) => {
+    // Pegamos o ID do usuário que vem pelo cabeçalho da requisição (headers)
+    const usuarioId = req.headers['usuario-id']; 
+
+    if (!usuarioId) {
+        return res.status(400).json({ erro: 'ID do usuário não informado.' });
+    }
+
     try {
         const query = `
             SELECT t.id, t.descricao, t.valor, c.tipo, t.data 
             FROM transacoes t
             JOIN categorias c ON t.categoria_id = c.id
+            WHERE t.usuario_id = $1  -- O segredo está aqui: filtro WHERE
             ORDER BY t.data DESC
         `;
-        const resultado = await pool.query(query);
+        const resultado = await pool.query(query, [usuarioId]);
         res.json(resultado.rows);
     } catch (erro) {
         console.error(erro);
@@ -111,22 +119,19 @@ app.get('/transacoes', async (req, res) => {
 });
 
 
-//4. rota de criação de transação (post)
-//recebe uma nova movimentação financeira e salva
+// 4. Rota de criação de transação (AGORA COM ID DINÂMICO)
 app.post('/transacoes', async (req, res) => {
-    const { descricao, valor, tipo } = req.body;
+    const { descricao, valor, tipo, usuarioId } = req.body; // Recebe usuarioId do front
 
     try {
-      
         let categoria_id = (tipo === 'entrada') ? 1 : 2; 
 
-  
         const query = `
             INSERT INTO transacoes (descricao, valor, usuario_id, categoria_id)
-            VALUES ($1, $2, 1, $3) RETURNING *
+            VALUES ($1, $2, $3, $4) RETURNING *
         `;
-      
-        const values = [descricao, valor, categoria_id];
+        
+        const values = [descricao, valor, usuarioId, categoria_id];
 
         const resultado = await pool.query(query, values);
         res.status(201).json(resultado.rows[0]);
@@ -136,7 +141,7 @@ app.post('/transacoes', async (req, res) => {
     }
 });
 
-// inicialização do servidor 
+// INICIALIZAÇÃO DO SERVIDOR (Esta é a parte que mantém ele rodando)
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });

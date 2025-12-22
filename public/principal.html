@@ -1,12 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagina principal</title>
+    <title>Dashboard - Orbit Finance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
+   
 </head>
 <body>
-    <h1>Bem vindo</h1>
-    
+    <div class="background-wrapper">
+        <div class="dashboard-container">
+            <header class="header">
+                <div>
+                    <h2>Olá, <span id="nomeUsuario">Usuário</span></h2>
+                    <p>Seu resumo financeiro</p>
+                </div>
+                <button onclick="fazerLogout()" class="btn-logout">Sair</button>
+            </header>
+
+            <section class="cards">
+                <div class="card entrada">
+                    <h3>Entradas</h3>
+                    <p id="totalEntradas">R$ 0,00</p>
+                </div>
+                <div class="card saida">
+                    <h3>Saídas</h3>
+                    <p id="totalSaidas">R$ 0,00</p>
+                </div>
+                <div class="card saldo">
+                    <h3>Saldo Total</h3>
+                    <p id="saldoTotal">R$ 0,00</p>
+                </div>
+            </section>
+
+            <section class="nova-transacao">
+                <h3>Nova Transação</h3>
+                <form id="formTransacao">
+                    <div class="input-group">
+                        <input type="text" id="descricao" placeholder="Descrição (ex: Aluguel)" required>
+                    </div>
+                    <div class="input-group" style="display: flex; gap: 10px;">
+                        <input type="number" step="0.01" id="valor" placeholder="Valor (R$)" required>
+                        <select id="tipo" required style="padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída</option>
+                        </select>
+                    </div>
+                    <button type="submit" style="margin-top: 10px;">Adicionar</button>
+                </form>
+            </section>
+
+            <section>
+                <h3>Histórico</h3>
+                <ul id="listaTransacoes" class="lista-transacoes">
+                    </ul>
+            </section>
+        </div>
+    </div>
+    <script src="scripts.js"></script>
 </body>
 </html>

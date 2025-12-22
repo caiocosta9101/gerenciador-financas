@@ -1,0 +1,248 @@
+/* === CONFIGURAÇÕES GERAIS === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    /* Fundo Azul Escuro + Imagem */
+    background-color: #0a192f;
+    background-image: url('images/fundologin.png'); 
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #ffffff;
+    min-height: 100vh;
+}
+
+/* Centraliza o painel na tela */
+.background-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* CARD PRINCIPAL (EFEITO VIDRO)*/
+.dashboard-container {
+    width: 100%;
+    max-width: 900px;
+    
+    /* O Efeito de Vidro */
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+/*CABEÇALHO */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 1rem;
+}
+
+.header h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.header span {
+    color: #60a5fa; /* Nome em Azul Neon */
+}
+
+.header p {
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+/* Botão Sair */
+.btn-logout {
+    background: rgba(239, 68, 68, 0.15); /* Vermelho transparente */
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+    padding: 8px 24px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+    /* Sobrescreve o estilo inline/padrão de botões */
+    margin-top: 0 !important; 
+    width: auto !important;
+}
+
+.btn-logout:hover {
+    background: rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
+}
+
+/*CARDS DE RESUMO (Entradas, Saídas, Saldo) */
+.cards {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.card {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+    min-width: 150px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.card h3 {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Cores específicas para os valores */
+.entrada p { color: #4ade80; text-shadow: 0 0 10px rgba(74, 222, 128, 0.25); } /* Verde */
+.saida p { color: #f87171; text-shadow: 0 0 10px rgba(248, 113, 113, 0.25); }   /* Vermelho */
+.saldo p { color: #60a5fa; text-shadow: 0 0 10px rgba(96, 165, 250, 0.25); }    /* Azul */
+
+/* FORMULÁRIO DE NOVA TRANSAÇÃO  */
+.nova-transacao h3, section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #e2e8f0;
+    border-left: 4px solid #60a5fa;
+    padding-left: 10px;
+}
+
+form {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.input-group {
+    margin-bottom: 1rem;
+}
+
+/* Inputs e Selects */
+input, select {
+    width: 100%;
+    padding: 14px 16px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px; /* Arredondado */
+    color: white;
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+/* Removemos bordas inline se houver e garantimos o estilo */
+select {
+    appearance: none; /* Remove seta padrão feia do navegador */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 0.65em auto;
+}
+
+input::placeholder { color: #94a3b8; }
+
+input:focus, select:focus {
+    border-color: #60a5fa;
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+select option {
+    background-color: #0a192f;
+    color: white;
+}
+
+/* Botão Adicionar */
+button[type="submit"] {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #0066ff 0%, #60a5fa 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 102, 255, 0.4);
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+/*  LISTA DE HISTÓRICO  */
+ul.lista-transacoes {
+    list-style: none;
+}
+
+.lista-transacoes li {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px;
+    margin-bottom: 0.8rem;
+    transition: 0.2s;
+}
+
+.lista-transacoes li:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Classes dinâmicas  */
+.lista-transacoes li.plus { border-left: 5px solid #4ade80; }
+.lista-transacoes li.minus { border-left: 5px solid #f87171; }
+
+/*  RESPONSIVIDADE  */
+@media (max-width: 600px) {
+    .dashboard-container {
+        padding: 1.5rem;
+    }
+    .cards {
+        flex-direction: column;
+    }
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    .input-group[style*="flex"] {
+        flex-direction: column;
+    }
+}
