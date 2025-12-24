@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 
 // Criação da aplicação Express
 const app = express();
@@ -27,41 +28,41 @@ const pool = new Pool({
     }
 });
 
-// 1. Rota de cadastro - recebe dados do usuário e salva no banco
+// 1. Rota de cadastro - com criptografia
 app.post('/cadastro', async (req, res) => {
-    const { nome, email, senha } = req.body;
+    const {nome, email, senha} = req.body;
 
-    // validação básica; garante que nada vazio chegue no banco
     if (!nome || !email || !senha) {
-        return res.status(400).json({ erro: 'Todos os campos são obrigatórios' });
+        return res.status(400).json({erro: 'todos os campos são obrigatórios'});
     }
-
     try {
-        // passo 1: verifica se o email já existe pra evitar duplicidade
-        const userCheck = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
+        //verifica duplicidade
+        const userCheck = await pool.query('select * from usuarios where email = $1', [email]);
         if (userCheck.rows.length > 0) {
-            return res.status(400).json({ erro: 'Este e-mail já está cadastrado.' });
+            return res.status(400).json({ erro: 'este e-mail já está cadastrado.'});
         }
+        //criptografa a senha antes de salvar
+        const saltRounds = 10;
+        const senhaCriptografada = await bcrypt.hash(senha, saltRounds);
 
-        // passo 2: Se não existe, insere o novo usuário
-        const query = 'INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING id, nome, email';
-        const values = [nome, email, senha];
+        //insere no banco a senha criptografada
+        const query = 'insert into usuarios (nome, email, senha) values ($1, $2, $3) returning id, nome, email';
+        const values = [nome, email, senhaCriptografada];
 
         const resultado = await pool.query(query, values);
-        
-        // Retorna sucesso
-        res.status(201).json({ 
-            mensagem: 'Usuário cadastrado com sucesso!',
+
+        res.status(201).json({
+            mensagem: 'usuário cadastrado com sucesso!',
             usuario: resultado.rows[0]
         });
 
     } catch (erro) {
         console.error(erro);
-        res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
+        res.status(500).json({erro: 'erro ao cadastrar usuário'});
     }
 });
 
-// 2. ROTA DE LOGIN - verifica se o email e senha batem com o registro do banco
+// 2. ROTA DE LOGIN - com comparação segura
 app.post('/login', async (req, res) => {
     const { email, senha } = req.body;
 
@@ -75,7 +76,11 @@ app.post('/login', async (req, res) => {
 
         const usuario = resultado.rows[0];
 
-        if (usuario.senha === senha) {
+        // --- AQUI A COMPARAÇÃO SEGURA ---
+        // Verifica se a senha digitada bate com a criptografada no banco
+        const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
+
+        if (senhaCorreta) {
             res.status(200).json({ 
                 mensagem: 'Login realizado!', 
                 usuarioId: usuario.id,
@@ -90,7 +95,6 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ erro: 'Erro no servidor' });
     }
 });
-
 
 // 3. Rota de listagem de transações (AGORA FILTRANDO POR USUÁRIO)
 app.get('/transacoes', async (req, res) => {
