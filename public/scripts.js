@@ -1,6 +1,6 @@
 //define o endereço do nosso back-end
 
-const API_URL = 'http://localhost:3000'; 
+const API_URL = ''; 
 
 console.log("Script carregado e pronto para conectar com a API!");
 
@@ -96,9 +96,8 @@ if (formCadastro) {
 }
 
 
-// ============================================
 // LÓGICA DO DASHBOARD (PRINCIPAL.HTML)
-// ============================================
+
 
 const nomeUsuarioSpan = document.getElementById('nomeUsuario');
 
@@ -220,3 +219,87 @@ if (formTransacao) {
         }
     });
 }
+
+
+
+// INTEGRAÇÃO COM CHATBOT
+
+async function enviarMensagemBot() {
+    const input = document.getElementById('chat-input');
+    const mensagensDiv = document.getElementById('chat-mensagens');
+    const textoUsuario = input.value;
+
+    // Se o campo estiver vazio, não faz nada
+    if (!textoUsuario.trim()) return;
+
+    // 1. Adiciona a mensagem do usuário na tela (lado direito ou identificado como Você)
+    mensagensDiv.innerHTML += `
+        <div style="margin-bottom: 10px; text-align: right;">
+            <span style="background: #dcf8c6; padding: 5px 10px; border-radius: 5px;">
+                <strong>Você:</strong> ${textoUsuario}
+            </span>
+        </div>`;
+    
+    // Limpa o campo e rola a tela para baixo
+    input.value = '';
+    mensagensDiv.scrollTop = mensagensDiv.scrollHeight;
+
+    // Mostra um "Digitando..." provisório
+    const idDigitando = 'digitando-' + Date.now();
+    mensagensDiv.innerHTML += `<div id="${idDigitando}" style="color: #888; font-size: 12px; margin-bottom: 10px;">O bot está digitando...</div>`;
+
+    try {
+        // ============================================================
+        // [IMPORTANTE 1] COLE A URL DO SEU AMIGO ABAIXO
+        // ============================================================
+        const URL_DO_BOT = 'https://api.era.dev.br/api/contact'; 
+
+        const response = await fetch(URL_DO_BOT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            // ============================================================
+            // [IMPORTANTE 2] VERIFIQUE O NOME DO CAMPO NO JSON
+            // Seu amigo espera receber { "message": "oi" } ou { "text": "oi" }?
+            // Pergunte a ele qual é a "chave" correta. Abaixo usei "mensagem".
+            // ============================================================
+            body: JSON.stringify({ mensagem: textoUsuario }) 
+        });
+
+        const dados = await response.json();
+
+        // Remove o aviso de "digitando..."
+        document.getElementById(idDigitando).remove();
+
+        // ============================================================
+        // [IMPORTANTE 3] COMO A RESPOSTA VOLTA?
+        // Se a resposta dele for { "reply": "Olá" }, use dados.reply
+        // Se for { "answer": "Olá" }, use dados.answer
+        // ============================================================
+        const respostaBot = dados.resposta || JSON.stringify(dados); 
+
+        // Adiciona a resposta do Bot na tela
+        mensagensDiv.innerHTML += `
+            <div style="margin-bottom: 10px; text-align: left;">
+                <span style="background: #fff; padding: 5px 10px; border-radius: 5px; border: 1px solid #ddd;">
+                    <strong>Bot:</strong> ${respostaBot}
+                </span>
+            </div>`;
+
+    } catch (error) {
+        console.error('Erro:', error);
+        if(document.getElementById(idDigitando)) document.getElementById(idDigitando).remove();
+        mensagensDiv.innerHTML += `<div style="color: red; margin-bottom: 10px;">Erro ao conectar com o bot.</div>`;
+    }
+
+    // Rola a tela para baixo novamente
+    mensagensDiv.scrollTop = mensagensDiv.scrollHeight;
+}
+
+// Permite enviar com a tecla ENTER
+document.getElementById('chat-input')?.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        enviarMensagemBot();
+    }
+});
