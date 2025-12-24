@@ -21,11 +21,10 @@ app.use(express.static(path.join(__dirname, '..' ,'public')));
 
 // Conexão com o banco de dados
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'financas_db',
-    password: '', // coloque a senha do postgrees aqui
-    port: 5432,
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // 1. Rota de cadastro - recebe dados do usuário e salva no banco
