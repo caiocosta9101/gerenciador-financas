@@ -28,6 +28,9 @@ const pool = new Pool({
     }
 });
 
+
+
+
 // 1. Rota de cadastro - com criptografia
 app.post('/cadastro', async (req, res) => {
     const {nome, email, senha} = req.body;
@@ -141,6 +144,19 @@ app.post('/transacoes', async (req, res) => {
     } catch (erro) {
         console.error(erro);
         res.status(500).json({ erro: 'Erro ao salvar transação' });
+    }
+});
+
+// 5.Rota para DELETAR transação
+app.delete('/transacoes/:id', async (req, res) => {
+    const { id } = req.params; 
+
+    try {
+        await pool.query('DELETE FROM transacoes WHERE id = $1', [id]);
+        res.status(200).json({ mensagem: 'Deletado com sucesso!' });
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao deletar' });
     }
 });
 

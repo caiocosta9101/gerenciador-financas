@@ -2,6 +2,8 @@
 
 const API_URL = ''; 
 
+
+
 console.log("Script carregado e pronto para conectar com a API!");
 
 // lógica do login
@@ -172,8 +174,19 @@ async function carregarTransacoes() {
             const sinal = item.tipo === 'entrada' ? '+' : '-';
 
             li.innerHTML = `
-                <span>${item.descricao}</span>
-                <span class="${classeCor}">${sinal} R$ ${valorNum.toFixed(2)}</span>
+                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                    <span>${item.descricao}</span>
+                    <div>
+                        <span class="${classeCor}">${sinal} R$ ${valorNum.toFixed(2)}</span>
+                        
+                        <button class="delete-btn" onclick="deleteTransaction(${item.id})">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                        </div>
+                </div>
             `;
             lista.appendChild(li);
         });
@@ -221,85 +234,30 @@ if (formTransacao) {
 }
 
 
-
-// INTEGRAÇÃO COM CHATBOT
-
-async function enviarMensagemBot() {
-    const input = document.getElementById('chat-input');
-    const mensagensDiv = document.getElementById('chat-mensagens');
-    const textoUsuario = input.value;
-
-    // Se o campo estiver vazio, não faz nada
-    if (!textoUsuario.trim()) return;
-
-    // 1. Adiciona a mensagem do usuário na tela (lado direito ou identificado como Você)
-    mensagensDiv.innerHTML += `
-        <div style="margin-bottom: 10px; text-align: right;">
-            <span style="background: #dcf8c6; padding: 5px 10px; border-radius: 5px;">
-                <strong>Você:</strong> ${textoUsuario}
-            </span>
-        </div>`;
+// Função que o botão chama quando é clicado apagando transação
+async function deleteTransaction(id) {
+    const confirmacao = confirm("Tem certeza que deseja excluir essa transação?");
     
-    // Limpa o campo e rola a tela para baixo
-    input.value = '';
-    mensagensDiv.scrollTop = mensagensDiv.scrollHeight;
+    if (confirmacao) {
+        try {
+            const response = await fetch(`${API_URL}/transacoes/${id}`, {
+                method: 'DELETE'
+            });
 
-    // Mostra um "Digitando..." provisório
-    const idDigitando = 'digitando-' + Date.now();
-    mensagensDiv.innerHTML += `<div id="${idDigitando}" style="color: #888; font-size: 12px; margin-bottom: 10px;">O bot está digitando...</div>`;
-
-    try {
-        // ============================================================
-        // [IMPORTANTE 1] COLE A URL DO SEU AMIGO ABAIXO
-        // ============================================================
-        const URL_DO_BOT = 'https://api.era.dev.br/api/contact'; 
-
-        const response = await fetch(URL_DO_BOT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            // ============================================================
-            // [IMPORTANTE 2] VERIFIQUE O NOME DO CAMPO NO JSON
-            // Seu amigo espera receber { "message": "oi" } ou { "text": "oi" }?
-            // Pergunte a ele qual é a "chave" correta. Abaixo usei "mensagem".
-            // ============================================================
-            body: JSON.stringify({ mensagem: textoUsuario }) 
-        });
-
-        const dados = await response.json();
-
-        // Remove o aviso de "digitando..."
-        document.getElementById(idDigitando).remove();
-
-        // ============================================================
-        // [IMPORTANTE 3] COMO A RESPOSTA VOLTA?
-        // Se a resposta dele for { "reply": "Olá" }, use dados.reply
-        // Se for { "answer": "Olá" }, use dados.answer
-        // ============================================================
-        const respostaBot = dados.resposta || JSON.stringify(dados); 
-
-        // Adiciona a resposta do Bot na tela
-        mensagensDiv.innerHTML += `
-            <div style="margin-bottom: 10px; text-align: left;">
-                <span style="background: #fff; padding: 5px 10px; border-radius: 5px; border: 1px solid #ddd;">
-                    <strong>Bot:</strong> ${respostaBot}
-                </span>
-            </div>`;
-
-    } catch (error) {
-        console.error('Erro:', error);
-        if(document.getElementById(idDigitando)) document.getElementById(idDigitando).remove();
-        mensagensDiv.innerHTML += `<div style="color: red; margin-bottom: 10px;">Erro ao conectar com o bot.</div>`;
+            // AQUI É A NOVIDADE: Verifica se o servidor respondeu OK (status 200-299)
+            if (response.ok) {
+                alert("Transação excluída com sucesso!");
+                location.reload(); // Só recarrega se deu certo
+            } else {
+                // Se der erro, mostramos o que aconteceu
+                const data = await response.json();
+                alert(`Erro ao excluir: ${data.erro || 'Erro desconhecido'}`);
+                console.error('Erro no servidor:', data);
+            }
+            
+        } catch (erro) {
+            console.error('Erro de conexão:', erro);
+            alert("Erro ao conectar com o servidor.");
+        }
     }
-
-    // Rola a tela para baixo novamente
-    mensagensDiv.scrollTop = mensagensDiv.scrollHeight;
 }
-
-// Permite enviar com a tecla ENTER
-document.getElementById('chat-input')?.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        enviarMensagemBot();
-    }
-});

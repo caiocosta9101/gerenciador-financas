@@ -246,3 +246,18 @@ ul.lista-transacoes {
         flex-direction: column;
     }
 }
+
+/* botão de deletar entrada e saída */
+
+.delete-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: 10px;
+    border-radius: 5px;
+}
+.delete-btn:hover {
+    background-color: #e60000;
+}
