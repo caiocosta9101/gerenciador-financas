@@ -30,7 +30,6 @@ const pool = new Pool({
 
 
 
-
 // 1. Rota de cadastro - com criptografia
 app.post('/cadastro', async (req, res) => {
     const {nome, email, senha} = req.body;
@@ -99,24 +98,42 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// 3. Rota de listagem de transações (AGORA FILTRANDO POR USUÁRIO)
+// 3. Rota de listagem de transações (COM FILTRO DE DATA)
 app.get('/transacoes', async (req, res) => {
-    // Pegamos o ID do usuário que vem pelo cabeçalho da requisição (headers)
     const usuarioId = req.headers['usuario-id']; 
+    const filtro = req.query.filtro; // <--- Pegamos o filtro da URL (?filtro=mes)
 
     if (!usuarioId) {
         return res.status(400).json({ erro: 'ID do usuário não informado.' });
     }
 
     try {
+        let filtroData = '';
+
+        // Lógica do SQL dinâmico
+        if (filtro === 'semana') {
+            // Últimos 7 dias
+            filtroData = "AND t.data >= NOW() - INTERVAL '7 days'"; 
+        } else if (filtro === 'mes') {
+            // Desde o dia 1º deste mês atual
+            filtroData = "AND t.data >= DATE_TRUNC('month', CURRENT_DATE)";
+        } else if (filtro === 'ano') {
+            // Desde o dia 1º de Janeiro deste ano
+            filtroData = "AND t.data >= DATE_TRUNC('year', CURRENT_DATE)";
+        }
+        // Se for 'todos', a variável filtroData fica vazia e busca tudo.
+
         const query = `
-            SELECT t.id, t.descricao, t.valor, c.tipo, t.data 
+            SELECT t.id, t.descricao, t.valor, c.tipo, c.nome as categoria_nome, t.data 
             FROM transacoes t
-            JOIN categorias c ON t.categoria_id = c.id
-            WHERE t.usuario_id = $1  -- O segredo está aqui: filtro WHERE
+            LEFT JOIN categorias c ON t.categoria_id = c.id
+            WHERE t.usuario_id = $1 ${filtroData} 
             ORDER BY t.data DESC
         `;
+        
+        // Note que adicionamos o ${filtroData} dentro da query
         const resultado = await pool.query(query, [usuarioId]);
+        
         res.json(resultado.rows);
     } catch (erro) {
         console.error(erro);
@@ -127,17 +144,17 @@ app.get('/transacoes', async (req, res) => {
 
 // 4. Rota de criação de transação (AGORA COM ID DINÂMICO)
 app.post('/transacoes', async (req, res) => {
-    const { descricao, valor, tipo, usuarioId } = req.body; // Recebe usuarioId do front
+    const { descricao, valor, usuarioId, categoria } = req.body; // Recebe usuarioId do front
 
     try {
-        let categoria_id = (tipo === 'entrada') ? 1 : 2; 
+        
 
         const query = `
             INSERT INTO transacoes (descricao, valor, usuario_id, categoria_id)
             VALUES ($1, $2, $3, $4) RETURNING *
         `;
         
-        const values = [descricao, valor, usuarioId, categoria_id];
+        const values = [descricao, valor, usuarioId, categoria];
 
         const resultado = await pool.query(query, values);
         res.status(201).json(resultado.rows[0]);
@@ -160,7 +177,28 @@ app.delete('/transacoes/:id', async (req, res) => {
     }
 });
 
-// INICIALIZAÇÃO DO SERVIDOR (Esta é a parte que mantém ele rodando)
+// 6. Rota para ATUALIZAR transação (PUT)
+app.put('/transacoes/:id', async (req, res) => {
+    const { id } = req.params;
+    const { descricao, valor, categoria } = req.body; 
+
+    try {
+        const query = `
+            UPDATE transacoes 
+            SET descricao = $1, valor = $2, categoria_id = $3
+            WHERE id = $4
+        `;
+        
+        await pool.query(query, [descricao, valor, categoria, id]);
+        
+        res.status(200).json({ mensagem: 'Atualizado com sucesso!' });
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: 'Erro ao atualizar' });
+    }
+});
+
+// INICIALIZAÇÃO DO SERVIDOR 
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });

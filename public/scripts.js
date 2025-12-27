@@ -1,15 +1,17 @@
 //define o endereço do nosso back-end
 
-const API_URL = ''; 
-
-
+ API_URL = ''; 
+let graficoPizza = null;
+let filtroAtual = 'mes';
+let transacoesAtuais = [];
+let idEdicao = null; 
 
 console.log("Script carregado e pronto para conectar com a API!");
 
 // lógica do login
 const formLogin = document.getElementById('formLogin');
 
-//verificamos se o formulário existe na página atual para evitar erros de console
+//verifiquei se o formulário existe na página atual para evitar erros de console
 if (formLogin) {
     formLogin.addEventListener('submit', async function(e) {
         //passo 1: impede o comportamento padrão do navegador (recarregar a página)
@@ -37,7 +39,7 @@ if (formLogin) {
                 // sucesso 
                 alert('Sucesso! ' + data.mensagem);
     
-                // Salvamos o ID e nome no navegador para usar nas próximas páginas
+                // Salvei o ID e nome no navegador para usar nas próximas páginas
                 //Isso permite que a página principal.html saiba quem está logado
                 localStorage.setItem('usuarioId', data.usuarioId);
                 localStorage.setItem('usuarioNome', data.nome);
@@ -113,6 +115,7 @@ if (nomeUsuarioSpan) {
     if (nomeSalvo) {
         nomeUsuarioSpan.innerText = nomeSalvo;
     }
+    iniciarFiltroCategorias()
 }
 
 // Função para garantir que só quem logou acesse a página
@@ -134,71 +137,20 @@ function fazerLogout() {
 // Carregar transacoes do banco
 async function carregarTransacoes() {
     const usuarioId = localStorage.getItem('usuarioId');
-    const lista = document.getElementById('listaTransacoes');
     
-    // Elementos dos Cards
-    const elEntradas = document.getElementById('totalEntradas');
-    const elSaidas = document.getElementById('totalSaidas');
-    const elSaldo = document.getElementById('saldoTotal');
-
     try {
-        // Note que passamos o ID no Header agora
-        const response = await fetch(`${API_URL}/transacoes`, {
+        const response = await fetch(`${API_URL}/transacoes?filtro=${filtroAtual}`, {
             method: 'GET',
-            headers: {
-                'usuario-id': usuarioId 
-            }
+            headers: { 'usuario-id': usuarioId }
         });
-        const transacoes = await response.json();
+        
+        transacoesAtuais = await response.json();
 
-        // Limpa a lista atual
-        lista.innerHTML = '';
-
-        let totalEntradas = 0;
-        let totalSaidas = 0;
-
-        transacoes.forEach(item => {
-            // Calcula totais
-            const valorNum = parseFloat(item.valor);
-            if (item.tipo === 'entrada') {
-                totalEntradas += valorNum;
-            } else {
-                totalSaidas += valorNum;
-            }
-
-            // Cria o HTML da lista
-            const li = document.createElement('li');
-            li.classList.add('item-transacao');
-            
-            const classeCor = item.tipo === 'entrada' ? 'valor-entrada' : 'valor-saida';
-            const sinal = item.tipo === 'entrada' ? '+' : '-';
-
-            li.innerHTML = `
-                <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                    <span>${item.descricao}</span>
-                    <div>
-                        <span class="${classeCor}">${sinal} R$ ${valorNum.toFixed(2)}</span>
-                        
-                        <button class="delete-btn" onclick="deleteTransaction(${item.id})">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                        </div>
-                </div>
-            `;
-            lista.appendChild(li);
-        });
-
-        // Atualiza os Cards
-        const saldo = totalEntradas - totalSaidas;
-        elEntradas.innerText = `R$ ${totalEntradas.toFixed(2)}`;
-        elSaidas.innerText = `R$ ${totalSaidas.toFixed(2)}`;
-        elSaldo.innerText = `R$ ${saldo.toFixed(2)}`;
+        // Chama a função que desenha a tela e calcula totais
+        atualizarLista();
 
     } catch (error) {
-        console.error('Erro ao carregar dashboard:', error);
+        console.error(error);
     }
 }
 
@@ -211,19 +163,40 @@ if (formTransacao) {
         const descricao = document.getElementById('descricao').value;
         const valor = document.getElementById('valor').value;
         const tipo = document.getElementById('tipo').value;
+        const categoria = document.getElementById('categoria').value;
         const usuarioId = localStorage.getItem('usuarioId');
 
+        if (!categoria) {
+            alert("Escolha uma categoria!");
+            return;
+        }
+
+        //LÓGICA INTELIGENTE (CRIAR OU EDITAR?) 
+        const isEdicao = idEdicao !== null; // Se idEdicao tem número, é edição
+        const endpoint = isEdicao ? `/transacoes/${idEdicao}` : '/transacoes';
+        const method = isEdicao ? 'PUT' : 'POST';
+
         try {
-            const response = await fetch(`${API_URL}/transacoes`, {
-                method: 'POST',
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ descricao, valor, tipo, usuarioId })
+                body: JSON.stringify({ descricao, valor, tipo, usuarioId, categoria })
             });
 
             if (response.ok) {
-                // Limpa o form e recarrega a lista
+                // Limpa tudo e volta ao normal
                 formTransacao.reset();
-                carregarTransacoes();
+                idEdicao = null; // Sai do modo edição
+                
+                // Reseta o botão para "Adicionar"
+                const btnSalvar = document.querySelector('#formTransacao button[type="submit"]');
+                if(btnSalvar) {
+                    btnSalvar.innerText = "Adicionar";
+                    btnSalvar.style.backgroundColor = ""; // Volta a cor original do CSS
+                    btnSalvar.style.color = "";
+                }
+
+                carregarTransacoes(); // Recarrega a lista atualizada
             } else {
                 alert('Erro ao salvar transação');
             }
@@ -259,5 +232,168 @@ async function deleteTransaction(id) {
             console.error('Erro de conexão:', erro);
             alert("Erro ao conectar com o servidor.");
         }
+    }
+}
+// FUNÇÕES filtro por categoria
+
+function iniciarFiltroCategorias() {
+    const selectTipo = document.getElementById('tipo');
+    const selectCategoria = document.getElementById('categoria');
+    if (selectTipo && selectCategoria) {
+        const todasOpcoes = Array.from(selectCategoria.options);
+        selectTipo.addEventListener('change', function() {
+            const tipo = this.value;
+            selectCategoria.value = ""; 
+            todasOpcoes.forEach(op => {
+                if(op.value === "") return;
+                op.style.display = op.classList.contains(`cat-${tipo}`) ? 'block' : 'none';
+            });
+        });
+        selectTipo.dispatchEvent(new Event('change'));
+    }
+}
+
+function atualizarGrafico(entradas, saidas) {
+    const ctx = document.getElementById('meuGrafico');
+    if (!ctx) return;
+    
+    // Destrói gráfico anterior se existir
+    if (graficoPizza) graficoPizza.destroy();
+    
+    // Se estiver tudo zerado, não desenha
+    if (entradas === 0 && saidas === 0) return;
+
+    graficoPizza = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Entradas', 'Saídas'],
+            datasets: [{
+                data: [entradas, saidas],
+                backgroundColor: ['#4ade80', '#f87171'], 
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff', 
+                        font: { size: 14 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Função para clicar nos botões de filtro
+function mudarFiltro(periodo) {
+    filtroAtual = periodo; // Atualiza a variável global
+
+    // 1. Tira a classe 'active' de todos os botões (apaga o neon)
+    document.querySelectorAll('.btn-filtro').forEach(btn => btn.classList.remove('active'));
+    
+    // 2. Coloca a classe 'active' só no botão clicado (acende o neon)
+    const btnClicado = document.getElementById(`btn-${periodo}`);
+    if (btnClicado) btnClicado.classList.add('active');
+
+    // 3. Recarrega os dados do servidor com o novo filtro
+    carregarTransacoes();
+}
+
+function atualizarLista() {
+    const lista = document.getElementById('listaTransacoes');
+    const elEntradas = document.getElementById('totalEntradas');
+    const elSaidas = document.getElementById('totalSaidas');
+    const elSaldo = document.getElementById('saldoTotal');
+
+    lista.innerHTML = '';
+    
+    let totalEntradas = 0;
+    let totalSaidas = 0;
+
+    transacoesAtuais.forEach(item => {
+        const valorNum = parseFloat(item.valor);
+        
+        // Soma os totais
+        if (item.tipo === 'entrada') totalEntradas += valorNum;
+        else totalSaidas += valorNum;
+
+        // Cria o elemento da lista
+        const li = document.createElement('li');
+        li.classList.add('item-transacao');
+        li.classList.add(item.tipo);
+
+        // Formata a data
+        const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+
+        li.innerHTML = `
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: bold;">${item.descricao}</span>
+                    <small style="color: #ccc; font-size: 12px;">
+                        ${dataFormatada} • ${item.categoria_nome || 'Geral'}
+                    </small>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="${item.tipo === 'entrada' ? 'valor-entrada' : 'valor-saida'}">
+                        ${item.tipo === 'entrada' ? '+' : '-'} R$ ${valorNum.toFixed(2)}
+                    </span>
+                    
+                    <button onclick="prepararEdicao(${item.id})" class="btn-editar" style="background:none; border:none; cursor:pointer;" title="Editar">
+                        ✏️
+                    </button>
+                    
+                    <button class="delete-btn" onclick="deleteTransaction(${item.id})" title="Excluir">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `;
+        lista.appendChild(li);
+    });
+
+    // Atualiza os textos do saldo lá em cima
+    elEntradas.innerText = `R$ ${totalEntradas.toFixed(2)}`;
+    elSaidas.innerText = `R$ ${totalSaidas.toFixed(2)}`;
+    elSaldo.innerText = `R$ ${(totalEntradas - totalSaidas).toFixed(2)}`;
+
+    atualizarGrafico(totalEntradas, totalSaidas);
+}
+
+// Função que preenche o formulário quando clica no lápis
+function prepararEdicao(id) {
+    // Acha a transação na memória (sem precisar ir no banco de novo)
+    const transacao = transacoesAtuais.find(t => t.id === id);
+
+    if (transacao) {
+        // 1. Preenche os campos lá em cima
+        document.getElementById('descricao').value = transacao.descricao;
+        document.getElementById('valor').value = transacao.valor;
+        document.getElementById('tipo').value = transacao.tipo;
+        
+        // Tenta selecionar a categoria (se o select tiver as opções carregadas)
+        const selectCategoria = document.getElementById('categoria');
+        if(selectCategoria) {
+            selectCategoria.value = transacao.categoria_id || ""; 
+        }
+
+        // 2. Avisa o sistema que estamos editando este ID 
+        idEdicao = id;
+
+        // 3. Muda o texto do botão para o usuário saber que está editando
+        const btnSalvar = document.querySelector('#formTransacao button[type="submit"]');
+        if(btnSalvar) {
+            btnSalvar.innerText = "Salvar Alteração 💾";
+            btnSalvar.style.backgroundColor = "#fbbf24"; 
+            btnSalvar.style.color = "#000"; 
+        }
+        
+        // Leva a tela EXATAMENTE para o formulário e centraliza ele
+        const form = document.getElementById('formTransacao');
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
