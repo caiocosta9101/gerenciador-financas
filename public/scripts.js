@@ -1,6 +1,6 @@
 //define o endereço do nosso back-end
 
- API_URL = ''; 
+API_URL = ''; 
 let graficoPizza = null;
 let filtroAtual = 'mes';
 let transacoesAtuais = [];
@@ -41,7 +41,7 @@ if (formLogin) {
     
                 // Salvei o ID e nome no navegador para usar nas próximas páginas
                 //Isso permite que a página principal.html saiba quem está logado
-                localStorage.setItem('usuarioId', data.usuarioId);
+                localStorage.setItem('token', data.token);
                 localStorage.setItem('usuarioNome', data.nome);
 
                 // Redirecionamento para o dashboard
@@ -120,8 +120,8 @@ if (nomeUsuarioSpan) {
 
 // Função para garantir que só quem logou acesse a página
 function verificarLogin() {
-    const usuarioId = localStorage.getItem('usuarioId');
-    if (!usuarioId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
         alert('Você precisa estar logado!');
         window.location.href = 'index.html';
     }
@@ -129,25 +129,31 @@ function verificarLogin() {
 
 // Função de Logout
 function fazerLogout() {
-    localStorage.removeItem('usuarioId');
+    localStorage.removeItem('token');
     localStorage.removeItem('usuarioNome');
     window.location.href = 'index.html';
 }
 
 // Carregar transacoes do banco
 async function carregarTransacoes() {
-    const usuarioId = localStorage.getItem('usuarioId');
-    
     try {
         const response = await fetch(`${API_URL}/transacoes?filtro=${filtroAtual}`, {
             method: 'GET',
-            headers: { 'usuario-id': usuarioId }
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
         });
+        
+        // Se o token vencer desloga
+        if (response.status === 401 || response.status === 403) {
+            alert("Sessão expirada. Faça login novamente.");
+            fazerLogout();
+            return;
+        }
         
         transacoesAtuais = await response.json();
 
-        // Chama a função que desenha a tela e calcula totais
-        atualizarLista();
+        atualizarLista(); 
 
     } catch (error) {
         console.error(error);
@@ -164,7 +170,6 @@ if (formTransacao) {
         const valor = document.getElementById('valor').value;
         const tipo = document.getElementById('tipo').value;
         const categoria = document.getElementById('categoria').value;
-        const usuarioId = localStorage.getItem('usuarioId');
 
         if (!categoria) {
             alert("Escolha uma categoria!");
@@ -179,8 +184,11 @@ if (formTransacao) {
         try {
             const response = await fetch(`${API_URL}${endpoint}`, {
                 method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ descricao, valor, tipo, usuarioId, categoria })
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ descricao, valor, tipo, categoria })
             });
 
             if (response.ok) {
@@ -214,7 +222,10 @@ async function deleteTransaction(id) {
     if (confirmacao) {
         try {
             const response = await fetch(`${API_URL}/transacoes/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
             });
 
             // AQUI É A NOVIDADE: Verifica se o servidor respondeu OK (status 200-299)

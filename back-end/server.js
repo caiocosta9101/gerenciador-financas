@@ -1,9 +1,19 @@
+// ]Carrega as variáveis de ambiente
+require('dotenv').config();
+
 // Importação das dependências 
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+
+//pega a senha secreta do arquivo .env
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
 
 // Criação da aplicação Express
 const app = express();
@@ -27,6 +37,31 @@ const pool = new Pool({
         rejectUnauthorized: false
     }
 });
+
+// SEGURANÇA (MIDDLEWARE)
+function verificarToken(req, res, next) {
+    const tokenHeader = req.headers['authorization'];
+
+    if (!tokenHeader) {
+        return res.status(401).json({ erro: 'Acesso negado. Faça login.' });
+    }
+
+    const token = tokenHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ erro: 'Token inválido.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        req.usuarioId = decoded.id;
+        
+        next();
+    } catch (erro) {
+        return res.status(403).json({ erro: 'Sessão inválida ou expirada.' });
+    }
+}
 
 
 
@@ -83,9 +118,12 @@ app.post('/login', async (req, res) => {
         const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
 
         if (senhaCorreta) {
+            // Cria o token
+            const token = jwt.sign({ id: usuario.id }, JWT_SECRET, { expiresIn: '1d' });
+
             res.status(200).json({ 
                 mensagem: 'Login realizado!', 
-                usuarioId: usuario.id,
+                token: token, // <--- Envia o token (a pulseirinha)
                 nome: usuario.nome 
             });
         } else {
@@ -99,9 +137,11 @@ app.post('/login', async (req, res) => {
 });
 
 // 3. Rota de listagem de transações (COM FILTRO DE DATA)
-app.get('/transacoes', async (req, res) => {
-    const usuarioId = req.headers['usuario-id']; 
-    const filtro = req.query.filtro; // <--- Pegamos o filtro da URL (?filtro=mes)
+app.get('/transacoes', verificarToken, async (req, res) => {
+    // O ID agora vem automático do token (seguro)
+    const usuarioId = req.usuarioId; 
+    
+    const filtro = req.query.filtro;
 
     if (!usuarioId) {
         return res.status(400).json({ erro: 'ID do usuário não informado.' });
@@ -109,19 +149,13 @@ app.get('/transacoes', async (req, res) => {
 
     try {
         let filtroData = '';
-
-        // Lógica do SQL dinâmico
         if (filtro === 'semana') {
-            // Últimos 7 dias
             filtroData = "AND t.data >= NOW() - INTERVAL '7 days'"; 
         } else if (filtro === 'mes') {
-            // Desde o dia 1º deste mês atual
             filtroData = "AND t.data >= DATE_TRUNC('month', CURRENT_DATE)";
         } else if (filtro === 'ano') {
-            // Desde o dia 1º de Janeiro deste ano
             filtroData = "AND t.data >= DATE_TRUNC('year', CURRENT_DATE)";
         }
-        // Se for 'todos', a variável filtroData fica vazia e busca tudo.
 
         const query = `
             SELECT t.id, t.descricao, t.valor, c.tipo, c.nome as categoria_nome, t.data 
@@ -131,9 +165,7 @@ app.get('/transacoes', async (req, res) => {
             ORDER BY t.data DESC
         `;
         
-        // Note que adicionamos o ${filtroData} dentro da query
         const resultado = await pool.query(query, [usuarioId]);
-        
         res.json(resultado.rows);
     } catch (erro) {
         console.error(erro);
@@ -143,12 +175,13 @@ app.get('/transacoes', async (req, res) => {
 
 
 // 4. Rota de criação de transação (AGORA COM ID DINÂMICO)
-app.post('/transacoes', async (req, res) => {
-    const { descricao, valor, usuarioId, categoria } = req.body; // Recebe usuarioId do front
+app.post('/transacoes', verificarToken, async (req, res) => {
+    const { descricao, valor, categoria } = req.body;
+
+    // ID do token validado
+    const usuarioId = req.usuarioId; 
 
     try {
-        
-
         const query = `
             INSERT INTO transacoes (descricao, valor, usuario_id, categoria_id)
             VALUES ($1, $2, $3, $4) RETURNING *
@@ -165,7 +198,7 @@ app.post('/transacoes', async (req, res) => {
 });
 
 // 5.Rota para DELETAR transação
-app.delete('/transacoes/:id', async (req, res) => {
+app.delete('/transacoes/:id', verificarToken, async (req, res) => {
     const { id } = req.params; 
 
     try {
@@ -178,7 +211,7 @@ app.delete('/transacoes/:id', async (req, res) => {
 });
 
 // 6. Rota para ATUALIZAR transação (PUT)
-app.put('/transacoes/:id', async (req, res) => {
+app.put('/transacoes/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
     const { descricao, valor, categoria } = req.body; 
 
