@@ -340,22 +340,22 @@ function atualizarLista() {
 
         // Formata a data
         const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
-
+        
         const htmlBruto = `
-            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: bold;">${item.descricao}</span>
-                    <small style="color: #ccc; font-size: 12px;">
+            <div class="transacao-conteudo">
+                <div class="transacao-info">
+                    <span class="transacao-titulo">${item.descricao}</span>
+                    <small class="transacao-detalhes">
                         ${dataFormatada} • ${item.categoria_nome || 'Geral'}
                     </small>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="transacao-acoes">
                     <span class="${item.tipo === 'entrada' ? 'valor-entrada' : 'valor-saida'}">
                         ${item.tipo === 'entrada' ? '+' : '-'} R$ ${valorNum.toFixed(2)}
                     </span>
                     
-                    <button onclick="prepararEdicao(${item.id})" class="btn-editar" style="background:none; border:none; cursor:pointer;" title="Editar">
+                    <button onclick="prepararEdicao(${item.id})" class="btn-icone" title="Editar">
                         ✏️
                     </button>
                     
@@ -365,6 +365,7 @@ function atualizarLista() {
                 </div>
             </div>
         `;
+        
         // O DOMPurify limpa a sujeira/vírus
         const htmlLimpo = DOMPurify.sanitize(htmlBruto);
 

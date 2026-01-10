@@ -297,13 +297,49 @@ ul.lista-transacoes {
     box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
 }
 
-.transacao-container {
-    display: flex; 
-    justify-content: space-between; 
-    width: 100%; 
+/*Estilos da lista*/
+
+/* O container que alinha Esquerda (Texto) e Direita (Valor/Botões) */
+.transacao-conteudo {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
     align-items: center;
 }
+
+/* Coluna do texto (Descrição e Data) */
 .transacao-info {
-    display: flex; 
+    display: flex;
     flex-direction: column;
+}
+
+.transacao-titulo {
+    font-weight: bold;
+    color: #fff;
+}
+
+.transacao-detalhes {
+    color: #ccc;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+/* Container da Direita (Valor e Botões) */
+.transacao-acoes {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Estilo limpo para os botões de ícone (Lápis) */
+.btn-icone {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+}
+
+.btn-icone:hover {
+    transform: scale(1.2); /* Um efeito de zoom suave ao passar o mouse */
 }
