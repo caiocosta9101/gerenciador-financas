@@ -296,3 +296,14 @@ ul.lista-transacoes {
     border-color: #60a5fa;
     box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
 }
+
+.transacao-container {
+    display: flex; 
+    justify-content: space-between; 
+    width: 100%; 
+    align-items: center;
+}
+.transacao-info {
+    display: flex; 
+    flex-direction: column;
+}

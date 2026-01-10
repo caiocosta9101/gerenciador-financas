@@ -319,6 +319,7 @@ function atualizarLista() {
     const elEntradas = document.getElementById('totalEntradas');
     const elSaidas = document.getElementById('totalSaidas');
     const elSaldo = document.getElementById('saldoTotal');
+    
 
     lista.innerHTML = '';
     
@@ -340,7 +341,7 @@ function atualizarLista() {
         // Formata a data
         const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
 
-        li.innerHTML = `
+        const htmlBruto = `
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                 <div style="display: flex; flex-direction: column;">
                     <span style="font-weight: bold;">${item.descricao}</span>
@@ -364,7 +365,13 @@ function atualizarLista() {
                 </div>
             </div>
         `;
+        // O DOMPurify limpa a sujeira/vírus
+        const htmlLimpo = DOMPurify.sanitize(htmlBruto);
+
+        // Joga na tela
+        li.innerHTML = htmlLimpo;
         lista.appendChild(li);
+        
     });
 
     // Atualiza os textos do saldo lá em cima
