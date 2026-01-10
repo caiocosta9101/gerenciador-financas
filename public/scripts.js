@@ -340,7 +340,7 @@ function atualizarLista() {
 
         // Formata a data
         const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
-        
+
         const htmlBruto = `
             <div class="transacao-conteudo">
                 <div class="transacao-info">
@@ -355,11 +355,11 @@ function atualizarLista() {
                         ${item.tipo === 'entrada' ? '+' : '-'} R$ ${valorNum.toFixed(2)}
                     </span>
                     
-                    <button onclick="prepararEdicao(${item.id})" class="btn-icone" title="Editar">
+                    <button class="btn-icone btn-editar" data-id="${item.id}" title="Editar">
                         ✏️
                     </button>
                     
-                    <button class="delete-btn" onclick="deleteTransaction(${item.id})" title="Excluir">
+                    <button class="delete-btn btn-excluir" data-id="${item.id}" title="Excluir">
                         🗑️
                     </button>
                 </div>
@@ -415,4 +415,27 @@ function prepararEdicao(id) {
         const form = document.getElementById('formTransacao');
         form.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+}
+
+// sistema de clique inteligente
+const listaEventos = document.getElementById('listaTransacoes');
+
+if (listaEventos) {
+    listaEventos.addEventListener('click', (e) => {
+        // Procura se o clique foi num botão (ou no ícone dentro dele)
+        const btnEditar = e.target.closest('.btn-editar');
+        const btnExcluir = e.target.closest('.btn-excluir');
+
+        // Se clicou no Editar
+        if (btnEditar) {
+            const id = btnEditar.getAttribute('data-id');
+            prepararEdicao(parseInt(id)); // Converte para número e chama a função
+        }
+
+        // Se clicou no Excluir
+        if (btnExcluir) {
+            const id = btnExcluir.getAttribute('data-id');
+            deleteTransaction(parseInt(id)); // Converte para número e chama a função
+        }
+    });
 }
