@@ -343,3 +343,81 @@ ul.lista-transacoes {
 .btn-icone:hover {
     transform: scale(1.2); /* Um efeito de zoom suave ao passar o mouse */
 }
+
+/*ÁREA DA IA (Google Gemini)*/
+.ia-area {
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.05); /* Vidro bem sutil */
+    padding: 1.2rem;
+    border-radius: 16px;
+    border: 1px dashed #60a5fa; /* Borda tracejada azul neon */
+    transition: all 0.3s ease;
+}
+
+.ia-area:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #93c5fd;
+}
+
+.ia-title {
+    color: #60a5fa;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ia-title small {
+    color: #94a3b8; /* Texto secundário cinza */
+    font-weight: 400;
+    font-size: 0.8rem;
+}
+
+.ia-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Input específico da IA*/
+#inputIA {
+    flex: 1; /* Faz o input ocupar todo espaço disponível */
+    background: rgba(0, 0, 0, 0.2); /* Um pouco mais escuro para destacar */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#inputIA:focus {
+    border-color: #a855f7; /* Roxo ao focar */
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+}
+
+/* Botão Mágico */
+.btn-magic {
+    width: auto !important; /* O "important" aqui é necessário para sobrescrever o width: 100% genérico dos botões */
+    margin-top: 0 !important;
+    background: linear-gradient(135deg, #a855f7 0%, #60a5fa 100%); /* Gradiente Roxo -> Azul */
+    padding: 0 1.5rem;
+    height: 50px; /* Mesma altura do input */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+}
+
+.btn-magic:hover {
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Responsividade para a IA */
+@media (max-width: 500px) {
+    .ia-controls {
+        flex-direction: column;
+    }
+    .btn-magic {
+        width: 100% !important;
+    }
+}

@@ -228,7 +228,7 @@ async function deleteTransaction(id) {
                 }
             });
 
-            // AQUI É A NOVIDADE: Verifica se o servidor respondeu OK (status 200-299)
+            //Verifica se o servidor respondeu OK (status 200-299)
             if (response.ok) {
                 alert("Transação excluída com sucesso!");
                 location.reload(); // Só recarrega se deu certo
@@ -438,4 +438,60 @@ if (listaEventos) {
             deleteTransaction(parseInt(id)); // Converte para número e chama a função
         }
     });
+}
+
+//função para IA
+
+async function usarIA() {
+    const inputIA = document.getElementById('inputIA');
+    const btn = document.querySelector('button[onclick="usarIA()"]');
+    
+    if (!inputIA.value) return alert("Digite algo!");
+
+    const textoOriginal = btn.innerText;
+    btn.innerText = "...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/interpretar-ia`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ frase: inputIA.value })
+        });
+
+        const dados = await response.json();
+
+        if (response.ok) {
+            // Preenche os campos
+            document.getElementById('descricao').value = dados.descricao;
+            document.getElementById('valor').value = dados.valor;
+            document.getElementById('tipo').value = dados.tipo;
+            
+            // Força a atualização da lista de categorias
+            const event = new Event('change');
+            document.getElementById('tipo').dispatchEvent(event);
+
+            // Seleciona a categoria com um pequeno delay
+            setTimeout(() => {
+                const selectCat = document.getElementById('categoria');
+                // Tenta selecionar, se o ID existir na lista
+                if (selectCat.querySelector(`option[value="${dados.categoria_id}"]`)) {
+                    selectCat.value = dados.categoria_id;
+                }
+            }, 100);
+
+            inputIA.value = ''; // Limpa o campo da IA
+        } else {
+            alert("Erro: " + JSON.stringify(dados));
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Erro na IA");
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
 }

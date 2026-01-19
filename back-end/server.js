@@ -8,6 +8,8 @@ const path = require('path');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 
 //pega a senha secreta do arquivo .env
@@ -62,6 +64,48 @@ function verificarToken(req, res, next) {
         return res.status(403).json({ erro: 'Sessão inválida ou expirada.' });
     }
 }
+
+// ROTA DE IA COM GEMINI
+app.post('/interpretar-ia', verificarToken, async (req, res) => {
+    const { frase } = req.body;
+
+    if (!frase) return res.status(400).json({ erro: 'Digite uma frase!' });
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const prompt = `
+            Você é uma API financeira. Converta a frase em JSON.
+            
+            IDs de Categoria:
+            1: Moradia, 2: Alimentação, 3: Transporte, 4: Lazer, 5: Saúde, 
+            6: Educação, 7: Compras, 8: Salário, 9: Investimentos, 10: Renda Extra
+
+            Regras:
+            - "tipo" deve ser "entrada" ou "saida".
+            - Extraia o valor numérico (ex: "50" para 50.00).
+            - "descricao" curta (ex: "Uber").
+            - Se não souber a categoria, chute a melhor.
+
+            Frase: "${frase}"
+
+            Responda APENAS JSON puro:
+            { "descricao": "string", "valor": number, "tipo": "entrada" ou "saida", "categoria_id": number }
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        // Limpeza para remover crases do Markdown se o Gemini mandar
+        let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+
+        const jsonFinal = JSON.parse(text);
+        res.json(jsonFinal);
+
+    } catch (erro) {
+        console.error("Erro no Gemini:", erro);
+        res.status(500).json({ erro: 'Erro ao processar IA' });
+    }
+});
 
 
 
