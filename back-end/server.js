@@ -65,23 +65,50 @@ function verificarToken(req, res, next) {
     }
 }
 
-// teste de modelos de ia
+// ROTA DE TESTE modelos de ia
 app.get('/testar-modelos', async (req, res) => {
     try {
-        const modelos = [];
-        for await (const m of genAI.listModels()) {
-            modelos.push({
-                nome: m.name,
-                displayName: m.displayName,
-                suporta: m.supportedGenerationMethods
-            });
+        // Lista de modelos para testar
+        const modelosParaTestar = [
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-latest", 
+            "gemini-1.5-pro",
+            "gemini-pro",
+            "models/gemini-1.5-flash",
+            "models/gemini-pro"
+        ];
+
+        const resultados = [];
+
+        for (const nomeModelo of modelosParaTestar) {
+            try {
+                const model = genAI.getGenerativeModel({ model: nomeModelo });
+                const result = await model.generateContent("Diga apenas: OK");
+                const text = result.response.text();
+                
+                resultados.push({
+                    modelo: nomeModelo,
+                    status: "✅ FUNCIONA",
+                    resposta: text
+                });
+            } catch (erro) {
+                resultados.push({
+                    modelo: nomeModelo,
+                    status: "❌ ERRO",
+                    erro: erro.message.substring(0, 100)
+                });
+            }
         }
-        res.json({ total: modelos.length, modelos });
+
+        res.json({ 
+            apiKeyConfigurada: !!process.env.GEMINI_API_KEY,
+            resultados 
+        });
+
     } catch (erro) {
-        res.status(500).json({ erro: erro.message, stack: erro.stack });
+        res.status(500).json({ erro: erro.message });
     }
 });
-
 
 
 
