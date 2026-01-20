@@ -69,43 +69,92 @@ function verificarToken(req, res, next) {
 app.post('/interpretar-ia', verificarToken, async (req, res) => {
     const { frase } = req.body;
 
-    if (!frase) return res.status(400).json({ erro: 'Digite uma frase!' });
+    // Validação básica
+    if (!frase || frase.trim().length < 3) {
+        return res.status(400).json({ erro: 'Digite uma frase válida.' });
+    }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // ===== MODELO CORRETO PARA FREE TIER =====
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-1.5-flash"
+        });
 
+        // ===== PROMPT =====
         const prompt = `
-            Você é uma API financeira. Converta a frase em JSON.
-            
-            IDs de Categoria:
-            1: Moradia, 2: Alimentação, 3: Transporte, 4: Lazer, 5: Saúde, 
-            6: Educação, 7: Compras, 8: Salário, 9: Investimentos, 10: Renda Extra
+Você é uma API financeira. Converta a frase em JSON puro.
 
-            Regras:
-            - "tipo" deve ser "entrada" ou "saida".
-            - Extraia o valor numérico (ex: "50" para 50.00).
-            - "descricao" curta (ex: "Uber").
-            - Se não souber a categoria, chute a melhor.
+Categorias:
+1: Moradia
+2: Alimentação
+3: Transporte
+4: Lazer
+5: Saúde
+6: Educação
+7: Compras
+8: Salário
+9: Investimentos
+10: Renda Extra
 
-            Frase: "${frase}"
+Regras:
+- "tipo" deve ser "entrada" ou "saida"
+- Extraia somente o número (ex: 45 -> 45.00)
+- "descricao" curta (ex: "Uber")
+- Se não souber a categoria, escolha a melhor
 
-            Responda APENAS JSON puro:
-            { "descricao": "string", "valor": number, "tipo": "entrada" ou "saida", "categoria_id": number }
+Frase: "${frase}"
+
+Responda SOMENTE com JSON válido:
+{
+  "descricao": "string",
+  "valor": number,
+  "tipo": "entrada" ou "saida",
+  "categoria_id": number
+}
         `;
 
+        // ===== CHAMADA À IA =====
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        // Limpeza para remover crases do Markdown se o Gemini mandar
-        let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
 
+        // ===== LIMPEZA DE RESPOSTA =====
+        let text = response.text()
+            .replace(/```json/gi, '')
+            .replace(/```/g, '')
+            .trim();
+
+        // ===== PARSE DO JSON =====
         const jsonFinal = JSON.parse(text);
+
+        // ===== VALIDAÇÃO MÍNIMA =====
+        if (
+            !jsonFinal.descricao ||
+            typeof jsonFinal.valor !== 'number' ||
+            !['entrada', 'saida'].includes(jsonFinal.tipo) ||
+            typeof jsonFinal.categoria_id !== 'number'
+        ) {
+            throw new Error('Resposta inválida da IA');
+        }
+
+        // ===== SUCESSO =====
         res.json(jsonFinal);
 
     } catch (erro) {
-        console.error("Erro no Gemini:", erro);
-        res.status(500).json({ erro: 'Erro ao processar IA' });
+        console.error("Erro na rota /interpretar-ia:", erro);
+        
+        // Tratamento específico para rate limit
+        if (erro.message?.includes('429') || erro.message?.includes('quota')) {
+            return res.status(429).json({
+                erro: 'Limite de requisições atingido. Aguarde um momento.'
+            });
+        }
+        
+        res.status(500).json({
+            erro: 'Erro ao processar a IA. Tente novamente.'
+        });
     }
 });
+
 
 
 
