@@ -72,7 +72,7 @@ app.post('/interpretar-ia', verificarToken, async (req, res) => {
     if (!frase) return res.status(400).json({ erro: 'Digite uma frase!' });
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
             Você é uma API financeira. Converta a frase em JSON.
