@@ -65,48 +65,60 @@ function verificarToken(req, res, next) {
     }
 }
 
-// ROTA DE TESTE modelos de ia
+// ROTA DE DIAGNÓSTICO COMPLETO
 app.get('/testar-modelos', async (req, res) => {
     try {
-        // Lista de modelos para testar
-        const modelosParaTestar = [
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-latest", 
-            "gemini-1.5-pro",
-            "gemini-pro",
-            "models/gemini-1.5-flash",
-            "models/gemini-pro"
-        ];
+        // Diagnóstico da API Key
+        const apiKey = process.env.GEMINI_API_KEY;
+        const diagnostico = {
+            apiKeyConfigurada: !!apiKey,
+            apiKeyComeca: apiKey ? apiKey.substring(0, 10) + '...' : 'NENHUMA',
+            apiKeyTamanho: apiKey ? apiKey.length : 0,
+            versaoPacote: require('@google/generative-ai/package.json').version
+        };
 
-        const resultados = [];
-
-        for (const nomeModelo of modelosParaTestar) {
+        // Teste direto com fetch
+        const testeManual = async () => {
             try {
-                const model = genAI.getGenerativeModel({ model: nomeModelo });
-                const result = await model.generateContent("Diga apenas: OK");
-                const text = result.response.text();
+                const response = await fetch(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-goog-api-key': apiKey
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: 'Diga apenas: OK' }]
+                            }]
+                        })
+                    }
+                );
+
+                const data = await response.json();
                 
-                resultados.push({
-                    modelo: nomeModelo,
-                    status: "✅ FUNCIONA",
-                    resposta: text
-                });
+                return {
+                    status: response.status,
+                    statusText: response.statusText,
+                    resposta: data
+                };
             } catch (erro) {
-                resultados.push({
-                    modelo: nomeModelo,
-                    status: "❌ ERRO",
-                    erro: erro.message.substring(0, 100)
-                });
+                return {
+                    erro: erro.message
+                };
             }
-        }
+        };
+
+        const resultadoManual = await testeManual();
 
         res.json({ 
-            apiKeyConfigurada: !!process.env.GEMINI_API_KEY,
-            resultados 
+            diagnostico,
+            testeFetch: resultadoManual
         });
 
     } catch (erro) {
-        res.status(500).json({ erro: erro.message });
+        res.status(500).json({ erro: erro.message, stack: erro.stack });
     }
 });
 
