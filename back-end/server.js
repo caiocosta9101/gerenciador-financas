@@ -65,6 +65,26 @@ function verificarToken(req, res, next) {
     }
 }
 
+// teste de modelos de ia
+app.get('/testar-modelos', async (req, res) => {
+    try {
+        const modelos = [];
+        for await (const m of genAI.listModels()) {
+            modelos.push({
+                nome: m.name,
+                displayName: m.displayName,
+                suporta: m.supportedGenerationMethods
+            });
+        }
+        res.json({ total: modelos.length, modelos });
+    } catch (erro) {
+        res.status(500).json({ erro: erro.message, stack: erro.stack });
+    }
+});
+
+
+
+
 // ROTA DE IA COM GEMINI
 app.post('/interpretar-ia', verificarToken, async (req, res) => {
     const { frase } = req.body;
