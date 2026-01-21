@@ -65,80 +65,6 @@ function verificarToken(req, res, next) {
     }
 }
 
-// TESTE COM API v1 (em vez de v1beta)
-app.get('/testar-modelos', async (req, res) => {
-    try {
-        const apiKey = process.env.GEMINI_API_KEY;
-        
-        // Lista de endpoints para testar (v1 e v1beta)
-        const testesAPI = [
-            {
-                nome: "v1/gemini-1.5-flash",
-                url: 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent'
-            },
-            {
-                nome: "v1/gemini-1.5-pro",
-                url: 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent'
-            },
-            {
-                nome: "v1/gemini-pro",
-                url: 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent'
-            },
-            {
-                nome: "v1beta/gemini-1.5-flash",
-                url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
-            }
-        ];
-
-        const resultados = [];
-
-        for (const teste of testesAPI) {
-            try {
-                const response = await fetch(teste.url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-goog-api-key': apiKey
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{ text: 'Responda apenas: OK' }]
-                        }]
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    resultados.push({
-                        modelo: teste.nome,
-                        status: "✅ FUNCIONA",
-                        resposta: data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data)
-                    });
-                } else {
-                    resultados.push({
-                        modelo: teste.nome,
-                        status: "❌ ERRO",
-                        codigo: response.status,
-                        erro: data.error?.message?.substring(0, 100)
-                    });
-                }
-            } catch (erro) {
-                resultados.push({
-                    modelo: teste.nome,
-                    status: "❌ ERRO",
-                    erro: erro.message
-                });
-            }
-        }
-
-        res.json({ resultados });
-
-    } catch (erro) {
-        res.status(500).json({ erro: erro.message });
-    }
-});
-
 
 // ROTA DE IA COM GEMINI
 app.post('/interpretar-ia', verificarToken, async (req, res) => {
@@ -152,7 +78,7 @@ app.post('/interpretar-ia', verificarToken, async (req, res) => {
     try {
         // ===== MODELO CORRETO PARA FREE TIER =====
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash"
+            model: "gemini-pro"
         });
 
         // ===== PROMPT =====
@@ -189,7 +115,14 @@ Responda SOMENTE com JSON válido:
         `;
 
         // ===== CHAMADA À IA =====
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent({
+    contents: [
+        {
+            role: "user",
+            parts: [{ text: prompt }]
+        }
+    ]
+});
         const response = await result.response;
 
         // ===== LIMPEZA DE RESPOSTA =====
@@ -200,18 +133,20 @@ Responda SOMENTE com JSON válido:
 
         // ===== PARSE DO JSON =====
         const jsonFinal = JSON.parse(text);
+        // normalizações defensivas
+        jsonFinal.valor = Number(jsonFinal.valor);
+        jsonFinal.categoria_id = Number(jsonFinal.categoria_id);
 
         // ===== VALIDAÇÃO MÍNIMA =====
         if (
             !jsonFinal.descricao ||
-            typeof jsonFinal.valor !== 'number' ||
+            Number.isNaN(jsonFinal.valor) ||
             !['entrada', 'saida'].includes(jsonFinal.tipo) ||
-            typeof jsonFinal.categoria_id !== 'number'
+            Number.isNaN(jsonFinal.categoria_id)
         ) {
             throw new Error('Resposta inválida da IA');
         }
 
-        // ===== SUCESSO =====
         res.json(jsonFinal);
 
     } catch (erro) {
@@ -404,5 +339,5 @@ app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });
 
-//f forçando atualização
+
 
