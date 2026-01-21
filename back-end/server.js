@@ -78,7 +78,7 @@ app.post('/interpretar-ia', verificarToken, async (req, res) => {
     try {
         // ===== MODELO CORRETO PARA FREE TIER =====
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-pro"
+            model: "gemini-3-flash-preview"
         });
 
         // ===== PROMPT =====
