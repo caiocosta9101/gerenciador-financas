@@ -495,3 +495,68 @@ async function usarIA() {
         btn.disabled = false;
     }
 }
+
+// Função para enviar a foto
+async function enviarFoto(input) {
+    const arquivo = input.files[0];
+    if (!arquivo) return;
+
+    const btnClip = document.querySelector('.btn-clip');
+    const textoOriginal = btnClip.innerText;
+    
+    // Feedback visual de carregamento
+    btnClip.innerText = "⏳";
+    btnClip.disabled = true;
+
+    // Cria o pacote de dados (FormData é obrigatório para enviar arquivos)
+    const formData = new FormData();
+    formData.append('imagem', arquivo);
+
+    try {
+        const response = await fetch(`${API_URL}/analisar-notinha`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                // IMPORTANTE: Não adicione 'Content-Type' aqui. O navegador faz isso sozinho para arquivos.
+            },
+            body: formData
+        });
+
+        const dados = await response.json();
+
+        if (response.ok) {
+            // Preenche o formulário com os dados que o Gemini 3 achou
+            document.getElementById('descricao').value = dados.descricao;
+            document.getElementById('valor').value = dados.valor;
+            document.getElementById('tipo').value = dados.tipo;
+            
+            // Atualiza o select de tipo (Entrada/Saida)
+            const event = new Event('change');
+            document.getElementById('tipo').dispatchEvent(event);
+
+            // Seleciona a categoria com um pequeno delay para dar tempo do select atualizar
+            setTimeout(() => {
+                const selectCat = document.getElementById('categoria');
+                // Verifica se a categoria existe antes de selecionar
+                if (selectCat.querySelector(`option[value="${dados.categoria_id}"]`)) {
+                    selectCat.value = dados.categoria_id;
+                }
+            }, 100);
+
+            // Rola a tela até o formulário para o usuário conferir
+            document.getElementById('formTransacao').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+        } else {
+            alert("Erro: " + (dados.erro || "Falha ao ler imagem"));
+        }
+
+    } catch (erro) {
+        console.error(erro);
+        alert("Erro ao enviar imagem. Verifique o console.");
+    } finally {
+        // Reseta o input para permitir enviar a mesma foto de novo se precisar
+        input.value = ""; 
+        btnClip.innerText = textoOriginal;
+        btnClip.disabled = false;
+    }
+}

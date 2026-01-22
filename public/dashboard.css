@@ -344,7 +344,7 @@ ul.lista-transacoes {
     transform: scale(1.2); /* Um efeito de zoom suave ao passar o mouse */
 }
 
-/*ÁREA DA IA (Google Gemini)*/
+/* === ÁREA DA IA (Google Gemini) === */
 .ia-area {
     margin-bottom: 1.5rem;
     background: rgba(255, 255, 255, 0.05); /* Vidro bem sutil */
@@ -381,7 +381,12 @@ ul.lista-transacoes {
     align-items: center;
 }
 
-/* Input específico da IA*/
+/* Esconde o input de arquivo padrão (que é feio) */
+#inputFoto {
+    display: none;
+}
+
+/* Input específico da IA (Texto) */
 #inputIA {
     flex: 1; /* Faz o input ocupar todo espaço disponível */
     background: rgba(0, 0, 0, 0.2); /* Um pouco mais escuro para destacar */
@@ -393,9 +398,36 @@ ul.lista-transacoes {
     box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
 }
 
+/* Novo Botão de Câmera (estilo moderno) */
+.btn-clip {
+    width: 50px; /* Largura fixa quadrada */
+    height: 50px; /* Mesma altura do input */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-clip:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #60a5fa; /* Azul neon ao passar o mouse */
+    transform: translateY(-2px);
+}
+
+.btn-clip:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 /* Botão Mágico */
 .btn-magic {
-    width: auto !important; /* O "important" aqui é necessário para sobrescrever o width: 100% genérico dos botões */
+    width: auto !important;
     margin-top: 0 !important;
     background: linear-gradient(135deg, #a855f7 0%, #60a5fa 100%); /* Gradiente Roxo -> Azul */
     padding: 0 1.5rem;
@@ -403,8 +435,14 @@ ul.lista-transacoes {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
     gap: 8px;
     box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+    transition: 0.3s;
 }
 
 .btn-magic:hover {
@@ -417,7 +455,9 @@ ul.lista-transacoes {
     .ia-controls {
         flex-direction: column;
     }
-    .btn-magic {
+    
+    /* No celular, os botões ocupam a largura total */
+    .btn-magic, .btn-clip {
         width: 100% !important;
     }
 }

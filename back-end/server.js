@@ -10,6 +10,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+//biblioteca pra usar foto no app
+
+const multer = require('multer');
+// Configura para salvar na memória RAM
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 } // Limite de 5MB
+});
 
 
 //pega a senha secreta do arquivo .env
@@ -162,6 +170,61 @@ Responda SOMENTE com JSON válido:
         res.status(500).json({
             erro: 'Erro ao processar a IA. Tente novamente.'
         });
+    }
+});
+
+//Ia com foto
+
+app.post('/analisar-notinha', verificarToken, upload.single('imagem'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ erro: 'Nenhuma imagem enviada.' });
+        }
+
+        // Converte a imagem da memória para Base64 (formato que o Gemini aceita)
+        const imagemBase64 = {
+            inlineData: {
+                data: req.file.buffer.toString("base64"),
+                mimeType: req.file.mimetype,
+            },
+        };
+
+        // ===== MODELO GEMINI 3 PRO (DO SEU PRINT) =====
+        // Dica: Se der erro 404 no modelo, clique em "<> Get Code" no AI Studio para confirmar o ID exato.
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-3-pro-preview" 
+        });
+
+        const prompt = `
+            Você é um especialista em contabilidade. Analise esta foto de nota fiscal/recibo.
+            Extraia os dados com precisão e retorne APENAS um JSON válido.
+            
+            Categorias IDs:
+            1: Moradia, 2: Alimentação, 3: Transporte, 4: Lazer, 5: Saúde, 
+            6: Educação, 7: Compras, 8: Salário, 9: Investimentos, 10: Renda Extra
+            
+            Regras:
+            - "descricao": Nome do estabelecimento ou produto principal (ex: "McDonalds", "Posto Shell").
+            - "valor": O valor TOTAL da nota (número float).
+            - "tipo": sempre "saida".
+            - "categoria_id": O ID mais adequado.
+            
+            Retorne SOMENTE o JSON:
+            { "descricao": "string", "valor": number, "tipo": "saida", "categoria_id": number }
+        `;
+
+        const result = await model.generateContent([prompt, imagemBase64]);
+        const response = await result.response;
+        
+        // Limpeza para garantir que venha só o JSON
+        let text = response.text().replace(/```json/gi, '').replace(/```/g, '').trim();
+        const jsonFinal = JSON.parse(text);
+
+        res.json(jsonFinal);
+
+    } catch (erro) {
+        console.error("Erro ao processar imagem:", erro);
+        res.status(500).json({ erro: 'Não foi possível ler a nota. Tente uma foto mais clara.' });
     }
 });
 

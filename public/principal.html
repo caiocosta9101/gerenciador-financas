@@ -59,10 +59,16 @@
                     </h4>
                     
                     <div class="ia-controls">
-                        <input type="text" id="inputIA" placeholder="Ex: Gastei 45 no BK..." autocomplete="off">
+                        <input type="text" id="inputIA" placeholder="Digite ou envie foto..." autocomplete="off">
                         
+                        <input type="file" id="inputFoto" accept="image/*" onchange="enviarFoto(this)">
+                        
+                        <button type="button" onclick="document.getElementById('inputFoto').click()" class="btn-clip" title="Enviar foto">
+                            📷
+                        </button>
+
                         <button type="button" onclick="usarIA()" class="btn-magic">
-                            Mágica 🪄
+                            🪄
                         </button>
                     </div>
                 </div>
