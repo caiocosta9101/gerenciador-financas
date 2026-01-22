@@ -189,10 +189,9 @@ app.post('/analisar-notinha', verificarToken, upload.single('imagem'), async (re
             },
         };
 
-        // ===== MODELO GEMINI 3 PRO (DO SEU PRINT) =====
-        // Dica: Se der erro 404 no modelo, clique em "<> Get Code" no AI Studio para confirmar o ID exato.
+       
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-3-pro-preview" 
+            model: "gemini-3-flash-preview" 
         });
 
         const prompt = `
