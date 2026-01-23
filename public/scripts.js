@@ -504,20 +504,50 @@ async function enviarFoto(input) {
     const btnClip = document.querySelector('.btn-clip');
     const textoOriginal = btnClip.innerText;
     
-    // Feedback visual de carregamento
+    // Feedback visual
     btnClip.innerText = "⏳";
     btnClip.disabled = true;
 
-    // Cria o pacote de dados (FormData é obrigatório para enviar arquivos)
-    const formData = new FormData();
-    formData.append('imagem', arquivo);
-
     try {
+        // === O SEGREDO DA VELOCIDADE (Compressão no Front-end) ===
+        const imagemReduzida = await new Promise((resolve) => {
+            const img = new Image();
+            img.src = URL.createObjectURL(arquivo);
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                
+                // Define um tamanho máximo (800px é perfeito para leitura)
+                const MAX_WIDTH = 800;
+                const scaleSize = MAX_WIDTH / img.width;
+                
+                // Se a imagem for menor que 800px, não aumenta
+                if (scaleSize < 1) {
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                } else {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                }
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Converte para JPEG com qualidade 70% (Fica levíssimo)
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/jpeg', 0.7);
+            };
+        });
+        // ==========================================================
+
+        const formData = new FormData();
+        // Envia a imagem reduzida em vez do arquivo original gigante
+        formData.append('imagem', imagemReduzida, "nota-otimizada.jpg");
+
         const response = await fetch(`${API_URL}/analisar-notinha`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
-                // IMPORTANTE: Não adicione 'Content-Type' aqui. O navegador faz isso sozinho para arquivos.
             },
             body: formData
         });
@@ -525,25 +555,22 @@ async function enviarFoto(input) {
         const dados = await response.json();
 
         if (response.ok) {
-            // Preenche o formulário com os dados que o Gemini 3 achou
             document.getElementById('descricao').value = dados.descricao;
             document.getElementById('valor').value = dados.valor;
             document.getElementById('tipo').value = dados.tipo;
             
-            // Atualiza o select de tipo (Entrada/Saida)
+            // Força atualização dos selects
             const event = new Event('change');
             document.getElementById('tipo').dispatchEvent(event);
 
-            // Seleciona a categoria com um pequeno delay para dar tempo do select atualizar
             setTimeout(() => {
                 const selectCat = document.getElementById('categoria');
-                // Verifica se a categoria existe antes de selecionar
                 if (selectCat.querySelector(`option[value="${dados.categoria_id}"]`)) {
                     selectCat.value = dados.categoria_id;
                 }
             }, 100);
 
-            // Rola a tela até o formulário para o usuário conferir
+            // Leva a tela até o formulário
             document.getElementById('formTransacao').scrollIntoView({ behavior: 'smooth', block: 'center' });
             
         } else {
@@ -552,9 +579,8 @@ async function enviarFoto(input) {
 
     } catch (erro) {
         console.error(erro);
-        alert("Erro ao enviar imagem. Verifique o console.");
+        alert("Erro ao enviar imagem.");
     } finally {
-        // Reseta o input para permitir enviar a mesma foto de novo se precisar
         input.value = ""; 
         btnClip.innerText = textoOriginal;
         btnClip.disabled = false;
