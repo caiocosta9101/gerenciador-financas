@@ -319,26 +319,31 @@ function atualizarLista() {
     const elEntradas = document.getElementById('totalEntradas');
     const elSaidas = document.getElementById('totalSaidas');
     const elSaldo = document.getElementById('saldoTotal');
-    
 
+    if (!lista) return; 
     lista.innerHTML = '';
     
     let totalEntradas = 0;
     let totalSaidas = 0;
 
+    // 1. CÁLCULO DOS TOTAIS (Sempre usa tudo para o saldo ficar correto)
     transacoesAtuais.forEach(item => {
         const valorNum = parseFloat(item.valor);
-        
-        // Soma os totais
         if (item.tipo === 'entrada') totalEntradas += valorNum;
         else totalSaidas += valorNum;
+    });
 
-        // Cria o elemento da lista
+    // 2. DEFINIÇÃO DE QUEM VAI PARA A TELA (Corte para despoluir)
+    const ehDashboard = window.location.pathname.includes('principal.html');
+    const dadosExibicao = ehDashboard ? transacoesAtuais.slice(0, 5) : transacoesAtuais;
+
+    // 3. DESENHO DOS ITENS NA TELA
+    dadosExibicao.forEach(item => {
+        const valorNum = parseFloat(item.valor);
         const li = document.createElement('li');
         li.classList.add('item-transacao');
         li.classList.add(item.tipo);
 
-        // Formata a data
         const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
 
         const htmlBruto = `
@@ -366,19 +371,15 @@ function atualizarLista() {
             </div>
         `;
         
-        // O DOMPurify limpa a sujeira/vírus
         const htmlLimpo = DOMPurify.sanitize(htmlBruto);
-
-        // Joga na tela
         li.innerHTML = htmlLimpo;
         lista.appendChild(li);
-        
     });
 
-    // Atualiza os textos do saldo lá em cima
-    elEntradas.innerText = `R$ ${totalEntradas.toFixed(2)}`;
-    elSaidas.innerText = `R$ ${totalSaidas.toFixed(2)}`;
-    elSaldo.innerText = `R$ ${(totalEntradas - totalSaidas).toFixed(2)}`;
+    // 4. ATUALIZAÇÃO DOS COMPONENTES VISUAIS
+    if (elEntradas) elEntradas.innerText = `R$ ${totalEntradas.toFixed(2)}`;
+    if (elSaidas) elSaidas.innerText = `R$ ${totalSaidas.toFixed(2)}`;
+    if (elSaldo) elSaldo.innerText = `R$ ${(totalEntradas - totalSaidas).toFixed(2)}`;
 
     atualizarGrafico(totalEntradas, totalSaidas);
 }
