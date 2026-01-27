@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrato - Orbit Finance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <div class="background-wrapper">
+        <div class="dashboard-container">
+            <header class="header">
+                <div class="header-topo">
+                    <button onclick="window.location.href='principal.html'" class="btn-voltar">← Painel</button>
+                    <h2>Extrato Detalhado</h2>
+                </div>
+            </header>
+
+            <section class="busca-container">
+                <input type="text" id="buscaDescricao" placeholder="🔍 Pesquisar descrição..." oninput="filtrarExtrato()">
+                
+                <div class="filtros-wrapper">
+                    <button class="btn-filtro" onclick="mudarFiltro('semana')" id="btn-semana">7 Dias</button>
+                    <button class="btn-filtro active" onclick="mudarFiltro('mes')" id="btn-mes">Mês</button>
+                    <button class="btn-filtro" onclick="mudarFiltro('ano')" id="btn-ano">Ano</button>
+                    <button class="btn-filtro" onclick="mudarFiltro('todos')" id="btn-todos">Tudo</button>
+                </div>
+            </section>
+
+            <section class="lista-extrato-full">
+                <ul id="listaTransacoes" class="lista-transacoes">
+                    </ul>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.8/purify.min.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html>
