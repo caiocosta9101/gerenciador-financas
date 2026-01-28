@@ -461,3 +461,38 @@ ul.lista-transacoes {
         width: 100% !important;
     }
 }
+
+/* CORREÇÃO DO LINK EXTRATO */
+
+/* 1. Alinha o Título à esquerda e o Link à direita */
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px; /* Espaço para a lista não grudar */
+}
+
+/* Ajuste fino: remove margem do H3 dentro desse container flex para alinhar o centro */
+.header-flex h3 {
+    margin-bottom: 0;
+}
+
+/* 2. Estilo do Link para combinar com o tema Neon */
+.link-extrato {
+    color: #60a5fa; /* Azul Neon */
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none; 
+    transition: all 0.3s ease;
+    
+    display: inline-flex;
+    align-items: center;
+    gap: 4px; 
+}
+
+/* Efeito ao passar o mouse */
+.link-extrato:hover {
+    color: #ffffff; /* Fica branco para destacar */
+    text-shadow: 0 0 8px rgba(96, 165, 250, 0.8); /* Brilho neon */
+    transform: translateX(5px); /* Move levemente para a direita → */
+}
