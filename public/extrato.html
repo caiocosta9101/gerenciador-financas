@@ -21,7 +21,14 @@
             </header>
 
             <section class="busca-container">
-                <input type="text" id="buscaDescricao" placeholder="🔍 Pesquisar descrição..." oninput="filtrarExtrato()">
+                <input 
+                    type="text" 
+                    id="buscaDescricao" 
+                    list="sugestoes-historico" 
+                    placeholder="🔍 Pesquisar descrição..." 
+                    oninput="filtrarExtrato()"
+                >
+                <datalist id="sugestoes-historico"></datalist>
                 
                 <div class="filtros-wrapper">
                     <button class="btn-filtro" onclick="mudarFiltro('semana')" id="btn-semana">7 Dias</button>

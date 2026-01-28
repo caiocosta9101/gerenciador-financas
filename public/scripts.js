@@ -154,6 +154,7 @@ async function carregarTransacoes() {
         transacoesAtuais = await response.json();
 
         atualizarLista(); 
+        atualizarSugestoes();
 
     } catch (error) {
         console.error(error);
@@ -586,4 +587,24 @@ async function enviarFoto(input) {
         btnClip.innerText = textoOriginal;
         btnClip.disabled = false;
     }
+}
+
+function atualizarSugestoes() {
+    const datalist = document.getElementById('sugestoes-historico');
+    if (!datalist) return; // Se não estiver na página de extrato, para aqui.
+
+    datalist.innerHTML = ''; // Limpa sugestões antigas
+
+    // 1. Pega só os nomes das transações
+    const descricoes = transacoesAtuais.map(t => t.descricao);
+
+    // 2. Remove nomes repetidos (Set faz isso automático)
+    const unicos = [...new Set(descricoes)];
+
+    // 3. Cria as opções pro navegador mostrar
+    unicos.forEach(nome => {
+        const option = document.createElement('option');
+        option.value = nome;
+        datalist.appendChild(option);
+    });
 }
