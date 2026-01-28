@@ -314,6 +314,8 @@ function mudarFiltro(periodo) {
     carregarTransacoes();
 }
 
+//função pra atualizar lista
+
 function atualizarLista() {
     const lista = document.getElementById('listaTransacoes');
     const elEntradas = document.getElementById('totalEntradas');
@@ -326,55 +328,29 @@ function atualizarLista() {
     let totalEntradas = 0;
     let totalSaidas = 0;
 
-    // 1. CÁLCULO DOS TOTAIS (Sempre usa tudo para o saldo ficar correto)
+    // 1. CÁLCULO DOS TOTAIS (Usa o array completo para o saldo não ficar errado)
     transacoesAtuais.forEach(item => {
         const valorNum = parseFloat(item.valor);
         if (item.tipo === 'entrada') totalEntradas += valorNum;
         else totalSaidas += valorNum;
     });
 
-    // 2. DEFINIÇÃO DE QUEM VAI PARA A TELA (Corte para despoluir)
+    // 2. CORTE PARA DESPOLUIR (Só mostra 5 na principal, tudo no extrato)
     const ehDashboard = window.location.pathname.includes('principal.html');
     const dadosExibicao = ehDashboard ? transacoesAtuais.slice(0, 5) : transacoesAtuais;
 
-    // 3. DESENHO DOS ITENS NA TELA
+    // 3. DESENHO DOS ITENS
     dadosExibicao.forEach(item => {
-        const valorNum = parseFloat(item.valor);
-        const li = document.createElement('li');
-        li.classList.add('item-transacao');
-        li.classList.add(item.tipo);
-
-        const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
-
-        const htmlBruto = `
-            <div class="transacao-conteudo">
-                <div class="transacao-info">
-                    <span class="transacao-titulo">${item.descricao}</span>
-                    <small class="transacao-detalhes">
-                        ${dataFormatada} • ${item.categoria_nome || 'Geral'}
-                    </small>
-                </div>
-                
-                <div class="transacao-acoes">
-                    <span class="${item.tipo === 'entrada' ? 'valor-entrada' : 'valor-saida'}">
-                        ${item.tipo === 'entrada' ? '+' : '-'} R$ ${valorNum.toFixed(2)}
-                    </span>
-                    
-                    <button class="btn-icone btn-editar" data-id="${item.id}" title="Editar">
-                        ✏️
-                    </button>
-                    
-                    <button class="delete-btn btn-excluir" data-id="${item.id}" title="Excluir">
-                        🗑️
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        const htmlLimpo = DOMPurify.sanitize(htmlBruto);
-        li.innerHTML = htmlLimpo;
-        lista.appendChild(li);
+        renderizarLinhaTransacao(item, lista);
     });
+
+    // 4. ATUALIZAÇÃO VISUAL
+    if (elEntradas) elEntradas.innerText = `R$ ${totalEntradas.toFixed(2)}`;
+    if (elSaidas) elSaidas.innerText = `R$ ${totalSaidas.toFixed(2)}`;
+    if (elSaldo) elSaldo.innerText = `R$ ${(totalEntradas - totalSaidas).toFixed(2)}`;
+
+    atualizarGrafico(totalEntradas, totalSaidas);
+}
 
     // 4. ATUALIZAÇÃO DOS COMPONENTES VISUAIS
     if (elEntradas) elEntradas.innerText = `R$ ${totalEntradas.toFixed(2)}`;
@@ -383,6 +359,33 @@ function atualizarLista() {
 
     atualizarGrafico(totalEntradas, totalSaidas);
 }
+
+function renderizarLinhaTransacao(item, container) {
+    const valorNum = parseFloat(item.valor);
+    const li = document.createElement('li');
+    li.classList.add('item-transacao', item.tipo);
+
+    const dataFormatada = new Date(item.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+
+    const htmlBruto = `
+        <div class="transacao-conteudo">
+            <div class="transacao-info">
+                <span class="transacao-titulo">${item.descricao}</span>
+                <small class="transacao-detalhes">${dataFormatada} • ${item.categoria_nome || 'Geral'}</small>
+            </div>
+            <div class="transacao-acoes">
+                <span class="${item.tipo === 'entrada' ? 'valor-entrada' : 'valor-saida'}">
+                    ${item.tipo === 'entrada' ? '+' : '-'} R$ ${valorNum.toFixed(2)}
+                </span>
+                <button class="btn-icone btn-editar" data-id="${item.id}">✏️</button>
+                <button class="delete-btn btn-excluir" data-id="${item.id}">🗑️</button>
+            </div>
+        </div>`;
+    
+    li.innerHTML = DOMPurify.sanitize(htmlBruto);
+    container.appendChild(li);
+}
+
 
 // Função que preenche o formulário quando clica no lápis
 function prepararEdicao(id) {
@@ -586,4 +589,23 @@ async function enviarFoto(input) {
         btnClip.innerText = textoOriginal;
         btnClip.disabled = false;
     }
+}
+
+
+function filtrarExtrato() {
+    const termo = document.getElementById('buscaDescricao').value.toLowerCase();
+    const lista = document.getElementById('listaTransacoes');
+    if (!lista) return;
+
+    lista.innerHTML = '';
+    
+    // Filtra no array de memória
+    const filtradas = transacoesAtuais.filter(t => 
+        t.descricao.toLowerCase().includes(termo)
+    );
+
+    // Renderiza apenas as que batem com a busca
+    filtradas.forEach(item => {
+        renderizarLinhaTransacao(item, lista);
+    });
 }
