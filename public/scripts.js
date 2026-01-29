@@ -232,7 +232,7 @@ async function deleteTransaction(id) {
             //Verifica se o servidor respondeu OK (status 200-299)
             if (response.ok) {
                 alert("Transação excluída com sucesso!");
-                location.reload(); // Só recarrega se deu certo
+                carregarTransacoes();
             } else {
                 // Se der erro, mostramos o que aconteceu
                 const data = await response.json();
